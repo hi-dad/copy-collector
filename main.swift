@@ -31,6 +31,7 @@ final class Collector: ObservableObject {
         didSet {
             d.set(collecting, forKey: "collecting")
             if collecting && !oldValue { lastSeen = pb.changeCount; writePile() }
+            if !collecting && oldValue { keepLastOnly() }
             onChange?(); onPanel?()
         }
     }
@@ -44,12 +45,13 @@ final class Collector: ObservableObject {
     @Published var panelShown: Bool { didSet { d.set(panelShown, forKey: "panelShown"); onPanel?() } }
     @Published var autoPanel: Bool { didSet { d.set(autoPanel, forKey: "autoPanel"); onPanel?() } }
     var autoPanelDismissed = false      // closed by hand; stays closed until the pile drops below 2
-    /// The floating panel shows when switched on, or (optionally) while 2+ items are waiting.
+    /// While collecting, the floating panel shows when switched on, or (optionally) while 2+ items are waiting.
     var panelVisible: Bool {
-        panelShown || (autoPanel && !autoPanelDismissed && collecting && items.count >= 2)
+        collecting && (panelShown || (autoPanel && !autoPanelDismissed && items.count >= 2))
     }
     @Published var clearAfterPaste: Bool { didSet { d.set(clearAfterPaste, forKey: "clearAfterPaste"); onPasteSetting?() } }
-    @Published var format: Format { didSet { d.set(format.rawValue, forKey: "format"); refreshPile() } }
+    @Published var format: Format { didSet { d.set(format.rawValue, forKey: "format"); refreshPile(pb.changeCount == pileChange) } }
+    @Published var expireMinutes: Int { didSet { d.set(expireMinutes, forKey: "expireMinutes") } }
     @Published var emptyCopyClears: Bool { didSet { d.set(emptyCopyClears, forKey: "emptyCopyClears"); onPasteSetting?() } }
     @Published var keysAllowed = true   // Input Monitoring granted (needed to see ⌘V / ⌘C)
     @Published var ignoreRepeats: Bool { didSet { d.set(ignoreRepeats, forKey: "ignoreRepeats") } }
@@ -67,13 +69,12 @@ final class Collector: ObservableObject {
     private var lastSeen: Int
     private var pileChange = -1        // changeCount of our last pile write
     private var lastCopyKey = Date.distantPast
-    private var lastAdded = Date()
-    let expireAfter: TimeInterval = 5 * 60   // a pile of 2+ left alone this long is forgotten: clear it
+    private var lastAdded = Date()   // a pile left alone for expireMinutes is forgotten: clear it
 
     init() {
         d.register(defaults: ["collecting": false, "panelShown": false, "autoPanel": true,
                               "clearAfterPaste": true, "emptyCopyClears": true,
-                              "format": Format.plain.rawValue, "ignoreRepeats": true,
+                              "format": Format.plain.rawValue, "expireMinutes": 5, "ignoreRepeats": true,
                               "toast": false, "pulse": true])
         collecting = d.bool(forKey: "collecting")
         items = d.stringArray(forKey: "items") ?? []
@@ -82,6 +83,7 @@ final class Collector: ObservableObject {
         clearAfterPaste = d.bool(forKey: "clearAfterPaste")
         emptyCopyClears = d.bool(forKey: "emptyCopyClears")
         format = Format(rawValue: d.string(forKey: "format") ?? "") ?? .plain
+        expireMinutes = d.integer(forKey: "expireMinutes")
         ignoreRepeats = d.bool(forKey: "ignoreRepeats")
         toast = d.bool(forKey: "toast")
         pulse = d.bool(forKey: "pulse")
@@ -102,7 +104,7 @@ final class Collector: ObservableObject {
 
     /// Called on a timer: notices a new copy and adds it to the pile.
     func poll() {
-        if items.count >= 2 && Date().timeIntervalSince(lastAdded) > expireAfter { clearAll() }
+        if !items.isEmpty && Date().timeIntervalSince(lastAdded) > Double(expireMinutes * 60) { clearAll() }
         let c = pb.changeCount
         guard c != lastSeen else { return }
         lastSeen = c
@@ -131,15 +133,29 @@ final class Collector: ObservableObject {
         pileChange = lastSeen
     }
 
-    /// Rewrites the clipboard only if it still holds our pile (not something copied while off).
-    private func refreshPile() {
-        guard pb.changeCount == pileChange else { return }
+    /// The clipboard still holds our pile, even if another app wrote the same text back.
+    private var ownsClipboard: Bool {
+        !items.isEmpty && (pb.changeCount == pileChange || pb.string(forType: .string) == combined)
+    }
+
+    /// Rewrites the clipboard only if it held our pile (not something copied while off).
+    private func refreshPile(_ owned: Bool) {
+        guard owned else { return }
         if items.isEmpty { pb.clearContents(); lastSeen = pb.changeCount; pileChange = -1 }
         else { writePile() }
     }
 
-    func remove(_ i: Int) { items.remove(at: i); refreshPile() }
-    func clearAll() { items = []; refreshPile() }
+    func remove(_ i: Int) { let owned = ownsClipboard; items.remove(at: i); refreshPile(owned) }
+    func clearAll() { let owned = ownsClipboard; items = []; refreshPile(owned) }
+
+    /// Turning collecting off goes back to a normal clipboard: the pile empties and only the last copy stays.
+    private func keepLastOnly() {
+        guard let last = items.last else { return }
+        let owned = ownsClipboard
+        items = []
+        if owned { pb.clearContents(); pb.setString(last, forType: .string); lastSeen = pb.changeCount }
+        pileChange = -1
+    }
 
     func copyOne(_ i: Int) {
         pb.clearContents()
@@ -157,11 +173,16 @@ final class Collector: ObservableObject {
         }
     }
 
-    /// ⌘V was pressed somewhere. If it pasted a pile of 2+, empty it. A single item stays, so it can be
-    /// pasted again and again like a normal clipboard (forms, the same message to several people).
+    /// ⌘V was pressed somewhere. If it pasted the pile, empty the pile and the clipboard,
+    /// so a later ⌘V can't paste old things by surprise.
     func didPaste() {
-        guard clearAfterPaste, collecting, items.count >= 2, pb.changeCount == pileChange else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { self.items = [] }
+        guard clearAfterPaste, collecting, ownsClipboard else { return }
+        let pasted = pb.changeCount
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            self.items = []
+            if self.pb.changeCount == pasted { self.pb.clearContents(); self.lastSeen = self.pb.changeCount }
+            self.pileChange = -1
+        }
     }
 }
 
@@ -425,8 +446,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         p.level = .statusBar; p.ignoresMouseEvents = true
         p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         p.contentView = v
-        if let s = NSScreen.main?.visibleFrame {
-            p.setFrameOrigin(NSPoint(x: s.midX - v.fittingSize.width / 2, y: s.maxY - v.fittingSize.height - 12))
+        // Centered just above the pointer, where you're looking (kept on screen).
+        let m = NSEvent.mouseLocation, size = v.fittingSize
+        if let s = (NSScreen.screens.first { NSMouseInRect(m, $0.frame, false) } ?? NSScreen.main)?.visibleFrame {
+            p.setFrameOrigin(NSPoint(x: min(max(m.x - size.width / 2, s.minX), s.maxX - size.width),
+                                     y: min(max(m.y + 4, s.minY), s.maxY - size.height)))
         }
         p.orderFrontRegardless()
         toastPanel = p
@@ -562,8 +586,11 @@ struct MenuView: View {
             if showSettings {
                 Divider()
                 Toggle("Show panel when 2+ items are waiting", isOn: $c.autoPanel)
-                Toggle("Clear after pasting 2+ items", isOn: $c.clearAfterPaste)
+                Toggle("Clear after pasting", isOn: $c.clearAfterPaste)
                 Toggle("⌘C with nothing selected clears", isOn: $c.emptyCopyClears)
+                Picker("Clear when no new copy for", selection: $c.expireMinutes) {
+                    Text("2 min").tag(2); Text("5 min").tag(5)
+                }.pickerStyle(.segmented)
                 Picker("Format", selection: $c.format) {
                     ForEach(Format.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
@@ -571,8 +598,6 @@ struct MenuView: View {
                 Toggle("Pulse icon on copy", isOn: $c.pulse)
                 Toggle("Show “Added” bubble", isOn: $c.toast)
                 Toggle("Open at login", isOn: $c.atLogin)
-                Text("2+ items clear by themselves after 5 minutes without a new copy.")
-                    .font(.caption).foregroundStyle(.secondary)
                 Text("Only ⌘C adds to the pile. Dictation apps and other tools that borrow the clipboard are ignored.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 HStack {

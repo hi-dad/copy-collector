@@ -19,8 +19,9 @@ Free · macOS 13 or newer · always the latest version
 
 - Press **⌃⌥C** (or click the circle in the menu bar) to start collecting.
 - **⌘C** each thing you want. The number goes up.
-- **⌘V** pastes everything at once and starts a fresh pile. A single item stays, so you can paste it again and again.
-- With 2 or more waiting, a small list pops up so you know. If you forget, the pile clears itself after 5 minutes without a new copy.
+- **⌘V** pastes everything at once, then empties the pile and the clipboard, so nothing old gets pasted later.
+- With 2 or more waiting, a small list pops up so you know. If you forget, the pile clears itself after 2 or 5 minutes without a new copy (you choose).
+- Turn collecting off and your clipboard goes back to normal, holding just your last copy.
 - Click the circle to see, copy or remove items, or change the format (plain, quote, numbered).
 
 Only ⌘C adds to the pile, so it works alongside voice-to-text dictation apps that paste through the clipboard. It never collects passwords, and it ignores images and files. Nothing leaves your Mac.
