@@ -12,7 +12,7 @@ Free · macOS 13 or newer · always the latest version
 ## Install
 
 1. Open **CopyCollector.dmg** and drag Copy Collector into **Applications**.
-2. Open it. When macOS says it can't verify the app, click **Done**, then go to **System Settings → Privacy & Security** and click **Open Anyway** (once).
+2. Open it, and click **Open** when macOS asks if you're sure. (It's signed and checked by Apple.)
 3. Turn on **Input Monitoring** for Copy Collector when asked, so it can tell when you copy and paste.
 
 ## How to use it
