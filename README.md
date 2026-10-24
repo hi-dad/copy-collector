@@ -4,7 +4,7 @@
 
 **A tiny Mac menu bar app: copy several things while you read, then paste them all with one ⌘V.**
 
-<img src="docs/images/demo.gif" alt="Copy Collector: copy three passages in a row, the list piles up, one Command-V pastes them all, and the list clears after the paste" width="720">
+<img src="docs/images/ad.gif" alt="Copy Collector ad: copy three sentences from a web page and they stack up in a list; one Command-V pastes them all into Notes; dictation types as normal; Command-C with nothing selected clears the list; a full list clears itself after 5 minutes" width="720">
 
 ### [⬇️ Download Copy Collector](https://github.com/hi-dad/copy-collector/releases/latest/download/CopyCollector.dmg)
 Free · macOS 13 or newer · always the latest version

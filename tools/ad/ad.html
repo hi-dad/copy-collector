@@ -1,0 +1,287 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Copy Collector ad</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1200px;height:675px;overflow:hidden;background:#000;font-family:-apple-system,"SF Pro Text","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1200px;height:675px;overflow:hidden;
+  background:radial-gradient(900px 500px at 12% 8%,#d9fbe9 0%,transparent 60%),radial-gradient(700px 500px at 92% 100%,#0f7a55 0%,transparent 70%),linear-gradient(160deg,#a6ecc9 0%,#4fc596 55%,#1f9a6c 100%)}
+.abs{position:absolute}
+#menubar{left:0;top:0;width:100%;height:26px;background:rgba(255,255,255,.32);backdrop-filter:blur(10px);display:flex;align-items:center;padding:0 16px;gap:18px;font-size:13px;color:#0d3b2a;font-weight:500;z-index:60}
+#menubar .r{margin-left:auto;display:flex;gap:16px;align-items:center}
+#ccIcon{width:30px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center}
+#clock{font-variant-numeric:tabular-nums}
+.win{background:#fff;border-radius:12px;box-shadow:0 24px 60px rgba(0,40,25,.35),0 0 0 1px rgba(0,0,0,.08);overflow:hidden}
+.bar{height:38px;background:#eef1f3;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid #dde2e6}
+.bar i{width:12px;height:12px;border-radius:6px;display:block}
+.url{margin-left:20px;flex:1;height:22px;border-radius:6px;background:#fff;font-size:12px;color:#6b7383;display:flex;align-items:center;padding-left:10px}
+#browser .page{padding:24px 34px;color:#1d2433}
+#browser h1{font-size:28px;font-weight:800;letter-spacing:-.4px}
+#browser .sub{font-size:13px;color:#7a8291;margin:4px 0 14px}
+#browser .hero{height:92px;border-radius:12px;background:linear-gradient(120deg,#ffd9a8,#ff9f86 45%,#7fc8ff);margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:44px;gap:24px}
+#browser p{font-size:17.5px;line-height:1.5;margin:0 0 9px;color:#2b3242}
+#browser p .s{padding:1px 0;background:linear-gradient(#b3d7ff,#b3d7ff) no-repeat;background-size:0% 100%}
+#browser .lines div{height:10px;border-radius:5px;background:#e6e9ef;margin:9px 0}
+#notes{background:#fffdf5}
+#notes .side{position:absolute;left:0;top:38px;bottom:0;width:150px;background:#f4f1e6;border-right:1px solid #e6e0cc;padding:14px 10px}
+#notes .side div{height:44px;border-radius:8px;margin-bottom:6px;padding:7px 9px;font-size:11.5px;color:#555}
+#notes .side div b{display:block;font-size:12.5px;color:#222;margin-bottom:2px}
+#notes .side .on{background:#ffe58a}
+#notes .body{position:absolute;left:174px;top:62px;right:22px;font-size:16.5px;line-height:1.6;color:#222;white-space:pre-wrap}
+#notes .body .h{font-size:24px;font-weight:800;line-height:1.5}
+#notes .body .new{background:rgba(70,200,140,.22);border-radius:4px}
+.caret{display:inline-block;width:2px;height:20px;background:#e0a100;vertical-align:-4px;margin-left:1px}
+#panel{left:912px;top:36px;width:262px;border-radius:12px;background:rgba(32,32,34,.97);box-shadow:0 22px 50px rgba(0,30,20,.5),0 0 0 1px rgba(255,255,255,.08);color:#eee;z-index:55;transform-origin:70% 0;overflow:hidden}
+#panel .pt{height:30px;display:flex;align-items:center;padding:0 10px;gap:6px;font-size:12px;color:#9a9a9f;font-weight:600}
+#panel .pt i{width:10px;height:10px;border-radius:5px;background:#555;display:block}
+#panel .pt span{margin-left:auto;margin-right:auto;padding-right:36px}
+#panel .row{height:34px;margin:2px 8px;border-radius:8px;display:flex;align-items:center;gap:9px;padding:0 10px;font-size:13px;white-space:nowrap;overflow:hidden}
+#panel .row b{color:#777;font-weight:500;width:10px;font-size:12px}
+#panel .row.last{background:rgba(70,120,255,.18);color:#6ea0ff}
+#panel .ft{height:36px;display:flex;align-items:center;gap:7px;padding:0 12px;font-size:11.5px;color:#9a9a9f;margin-top:6px}
+#panel .ft i{width:7px;height:7px;border-radius:4px;background:#3ddc84;display:block}
+#panel .ft span{margin-left:auto;padding:3px 10px;border-radius:6px;background:#3a3a3d;color:#ddd;font-size:12px}
+#dict{left:50%;top:418px;transform:translateX(-50%);height:52px;padding:0 22px 0 16px;border-radius:26px;background:rgba(20,22,26,.92);color:#fff;display:flex;align-items:center;gap:12px;font-size:17px;font-weight:600;z-index:75;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+#dict .mic{width:32px;height:32px;border-radius:16px;background:#ff4d5e;display:flex;align-items:center;justify-content:center}
+#dict .wave{display:flex;gap:3px;align-items:center;height:24px}
+#dict .wave i{width:4px;border-radius:2px;background:#fff;display:block}
+#caption{left:50%;top:520px;transform:translateX(-50%);padding:16px 30px;border-radius:18px;background:rgba(8,40,28,.92);color:#fff;font-size:30px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;box-shadow:0 14px 40px rgba(0,40,25,.45),0 0 0 1.5px rgba(110,230,170,.55);z-index:70;display:flex;align-items:center;gap:14px}
+#caption .bullet{width:12px;height:12px;border-radius:6px;background:#6ee6aa;box-shadow:0 0 12px #6ee6aa;flex:none}
+#keys{display:flex;gap:18px;z-index:80}
+.key{width:104px;height:104px;border-radius:24px;background:linear-gradient(#fdfdfd,#e3eee8);box-shadow:0 6px 0 #a9c4b6,0 18px 40px rgba(0,0,0,.35);font-size:52px;font-weight:600;color:#0d3b2a;display:flex;align-items:center;justify-content:center}
+#chip{z-index:85;padding:6px 12px;border-radius:10px;background:#fff;color:#0d3b2a;font-size:20px;font-weight:700;box-shadow:0 4px 0 #a9c4b6,0 10px 24px rgba(0,0,0,.3)}
+#later{inset:0;z-index:66;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,40,27,.55);backdrop-filter:blur(3px);color:#fff}
+#later .face{width:150px;height:150px;border-radius:75px;background:#fff;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+#later .face i{position:absolute;left:73px;bottom:75px;width:4px;border-radius:2px;background:#0d3b2a;transform-origin:50% 100%}
+#later .face b{position:absolute;left:67px;top:67px;width:16px;height:16px;border-radius:8px;background:#1f9a6c}
+#later .lt{font-size:40px;font-weight:800;margin-top:22px;letter-spacing:-.5px}
+#cursor{width:24px;height:30px;z-index:90}
+#title,#outro{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:120;
+  background:radial-gradient(800px 500px at 50% 35%,#5fd8a2 0%,#23a374 70%,#127a54 100%)}
+#title img,#outro img{width:150px;height:150px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.3))}
+.big{font-size:80px;font-weight:800;letter-spacing:-2px;margin-top:14px}
+.tag{font-size:28px;font-weight:500;opacity:.92;margin-top:6px}
+.pill{display:inline-block;margin-top:22px;padding:9px 20px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);font-size:18px;font-weight:600}
+</style></head>
+<body>
+<div id="stage">
+  <div id="menubar" class="abs"><b>&#63743;</b><b id="appName">Safari</b><span>File</span><span>Edit</span><span>View</span><span>Window</span>
+    <span class="r"><span id="ccIcon"><svg width="22" height="18" viewBox="0 0 22 18"><circle id="ccRing" cx="11" cy="9" r="7.6" fill="none" stroke="#0d3b2a" stroke-width="1.5"/><text id="ccNum" x="11" y="12.6" text-anchor="middle" font-size="10" font-weight="700" fill="#0d3b2a" font-family="-apple-system"></text></svg></span>
+    <svg width="16" height="12" viewBox="0 0 16 12"><path d="M1 4.2a10 10 0 0 1 14 0M3.4 6.7a6.5 6.5 0 0 1 9.2 0M5.8 9.1a3 3 0 0 1 4.4 0" fill="none" stroke="#0d3b2a" stroke-width="1.5" stroke-linecap="round"/></svg><svg width="24" height="12" viewBox="0 0 24 12"><rect x=".7" y=".7" width="20" height="10.6" rx="3" fill="none" stroke="#0d3b2a" stroke-width="1.2"/><rect x="2.5" y="2.5" width="14" height="7" rx="1.5" fill="#0d3b2a"/><rect x="22" y="4" width="1.6" height="4" rx=".8" fill="#0d3b2a"/></svg><span id="clock">Sat 9:41 AM</span></span></div>
+
+  <div id="browser" class="abs win" style="left:28px;top:44px;width:650px;height:520px">
+    <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="url">travel-notes.example/lisbon-weekend</div></div>
+    <div class="page">
+      <h1>A weekend in Lisbon</h1>
+      <div class="sub">8 min read · Updated last week</div>
+      <div class="hero">🚋 🥐 🌅</div>
+      <p><span class="s" id="s1">Ride Tram 28 early, before the crowds pile on.</span></p>
+      <p><span class="s" id="s2">Pastéis de Belém opens at 8 — get the custard tarts warm.</span></p>
+      <p><span class="s" id="s3">Catch sunset at Miradouro da Senhora do Monte.</span></p>
+      <p><span class="s" id="s4">Book the Sintra day trip a week ahead.</span></p>
+      <p><span class="s" id="s5">Bring comfy shoes: the hills are steep.</span></p>
+      <div class="lines"><div style="width:90%"></div><div style="width:72%"></div></div>
+    </div>
+  </div>
+
+  <div id="notes" class="abs win" style="left:700px;top:150px;width:472px;height:400px">
+    <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="side"><div class="on"><b>Lisbon plan</b>9:41 AM</div><div><b>Groceries</b>Yesterday</div><div><b>Gift ideas</b>Oct 12</div></div>
+    <div class="body" id="ntext"></div>
+  </div>
+
+  <div id="panel" class="abs">
+    <div class="pt"><i></i><i></i><i></i><span id="pTitle">Collected · 0</span></div>
+    <div id="pRows"></div>
+    <div class="ft"><i></i><b id="pFoot" style="font-weight:500">⌘V pastes all 0</b><span>Clear</span></div>
+  </div>
+
+  <div id="dict" class="abs"><div class="mic"><svg width="12" height="18" viewBox="0 0 12 18"><rect x="3" y="1" width="6" height="10" rx="3" fill="#fff"/><path d="M1 8a5 5 0 0 0 10 0M6 13v4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></div><span>Dictating…</span><div class="wave" id="wave"></div></div>
+
+  <div id="keys" class="abs"></div>
+  <div id="chip" class="abs">⌘C</div>
+  <div id="caption" class="abs"><span class="bullet"></span><span id="capText"></span></div>
+  <div id="later" class="abs"><div class="face"><i id="hMin" style="height:56px"></i><i id="hHour" style="height:38px;width:5px;left:72.5px"></i><b></b></div><div class="lt">5 minutes later…</div></div>
+
+  <svg id="cursor" class="abs" viewBox="0 0 24 30"><path d="M2 2v22l6-6 4 9 4-2-4-8.5h8.5z" fill="#111" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+
+  <div id="title" class="abs"><img src="../../docs/images/icon.png"><div class="big">Copy Collector</div><div class="tag">Copy a bunch. Paste once.</div></div>
+  <div id="outro" class="abs"><img src="../../docs/images/icon.png"><div class="big">Copy Collector</div><div class="tag">Copy a bunch. Paste it once.</div><div class="pill">Free for Mac · github.com/hi-dad/copy-collector</div></div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const io = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const out = (x) => 1 - Math.pow(1 - x, 3);
+const back = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+const win = (t, a, b, d = .35) => Math.min(seg(t, a, a + d), 1 - seg(t, b - d, b));
+const css = (el, o) => Object.assign(el.style, o);
+
+const DUR = 30;
+const caps = [
+  [3.0, 5.8, 'Copy as many things as you like.'],
+  [5.8, 8.4, 'They stack up in a list as you go.'],
+  [8.4, 11.8, 'Paste them all at once.'],
+  [11.8, 15.0, 'Dictation works as normal.'],
+  [15.0, 19.0, '⌘C nothing to clear clipboard.'],
+  [19.0, 25.6, 'Clears after 5 min.'],
+];
+
+// each copy: [drag start, drag end, ⌘C time, sentence, selection gone at]
+const NOTES_CLICK = 8.6, BACK_CLICK = 15.1, DESELECT = 17.6;
+const PASTE = 9.6, PASTED = 10.1;      // ⌘V, then the list empties
+const CLEAR_KEY = 18.0, CLEARED = 18.5; // ⌘C with nothing selected
+const EXPIRE = 23.6;
+const sels = [[3.4, 4.0, 4.2, 's1', 4.7], [4.7, 5.3, 5.5, 's2', 6.1], [6.1, 6.7, 6.9, 's3', NOTES_CLICK],
+  [15.4, 15.9, 16.1, 's4', 16.4], [16.4, 16.9, 17.1, 's5', DESELECT],
+  [19.3, 19.8, 20.0, 's1', 20.3], [20.3, 20.8, 21.0, 's3', EXPIRE]];
+const clears = [PASTED, CLEARED, EXPIRE];
+const DICT_A = 12.0, DICT_B = 14.6, TYPE_A = 12.6, TYPE_B = 13.9;
+const TEXT = { s1: 'Ride Tram 28 early, before the crowds pile on.', s2: 'Pastéis de Belém opens at 8 — get the custard tarts warm.',
+  s3: 'Catch sunset at Miradouro da Senhora do Monte.', s4: 'Book the Sintra day trip a week ahead.', s5: 'Bring comfy shoes: the hills are steep.' };
+
+const lastClear = (t) => Math.max(-1, ...clears.filter((c) => c <= t));
+const pileAt = (t) => { const lc = lastClear(t); return sels.filter(([, , c]) => c <= t && c > lc); };
+
+let R = null;
+function rects() {
+  if (R) return R;
+  R = {};
+  for (const k of ['s1', 's2', 's3', 's4', 's5']) { const b = $(k).getBoundingClientRect(); R[k] = { l: b.left, r: b.right, y: b.top + b.height / 2 }; }
+  const n = $('notes').getBoundingClientRect(); R.notes = [n.left + 300, n.top + 120];
+  return R;
+}
+
+function path(t, k) {
+  if (t <= k[0][0]) return [k[0][1], k[0][2]];
+  for (let i = 1; i < k.length; i++) if (t <= k[i][0]) {
+    const x = io(seg(t, k[i - 1][0], k[i][0]));
+    return [lerp(k[i - 1][1], k[i][1], x), lerp(k[i - 1][2], k[i][2], x)];
+  }
+  const l = k[k.length - 1]; return [l[1], l[2]];
+}
+
+const keySet = (s) => { const el = $('keys'); if (el.dataset.k !== s) { el.innerHTML = [...s].map((c) => `<div class="key">${c}</div>`).join(''); el.dataset.k = s; } };
+
+function render(t) {
+  const r = rects();
+  // title & outro
+  const O = 25.8;
+  css($('title'), { opacity: 1 - seg(t, 2.6, 3.1), display: t < 3.1 ? 'flex' : 'none' });
+  const ti = back(seg(t, .1, .8));
+  $('title').querySelector('img').style.transform = `scale(${ti}) rotate(${(1 - ti) * -10}deg)`;
+  $('title').querySelector('.big').style.cssText = `opacity:${seg(t, .5, 1)};transform:translateY(${(1 - out(seg(t, .5, 1))) * 20}px)`;
+  $('title').querySelector('.tag').style.cssText = `opacity:${seg(t, .9, 1.4)}`;
+  css($('outro'), { opacity: seg(t, O, O + .6), display: t > O ? 'flex' : 'none' });
+  const oi = back(seg(t, O + .2, O + .9));
+  $('outro').querySelector('img').style.transform = `scale(${oi})`;
+  $('outro').querySelector('.big').style.opacity = seg(t, O + .6, O + 1.1);
+  $('outro').querySelector('.tag').style.opacity = seg(t, O + 1.0, O + 1.5);
+  $('outro').querySelector('.pill').style.cssText = `opacity:${seg(t, O + 1.4, O + 1.9)};transform:translateY(${(1 - out(seg(t, O + 1.4, O + 1.9))) * 14}px)`;
+
+  // caption
+  const cap = caps.find(([a, b]) => t >= a && t < b);
+  if (cap) {
+    $('capText').textContent = cap[2];
+    const ci = out(seg(t, cap[0], cap[0] + .35));
+    css($('caption'), { opacity: win(t, cap[0], cap[1], .25), display: 'flex', transform: `translateX(-50%) translateY(${(1 - ci) * 18}px) scale(${.96 + .04 * ci})` });
+  } else css($('caption'), { display: 'none' });
+
+  // which window is in front
+  const notesFront = t >= NOTES_CLICK && t < BACK_CLICK;
+  $('notes').style.zIndex = notesFront ? 12 : 10;
+  $('browser').style.zIndex = notesFront ? 10 : 11;
+  $('appName').textContent = notesFront ? 'Notes' : 'Safari';
+
+  // selections: one at a time, gone once you click elsewhere
+  for (const k of ['s1', 's2', 's3', 's4', 's5']) $(k).style.backgroundSize = '0% 100%';
+  for (const [a, b, , k, end] of sels) if (t >= a && t < end) $(k).style.backgroundSize = `${100 * io(seg(t, a, b))}% 100%`;
+
+  // menu bar circle
+  const p = pileAt(t);
+  const pulse = sels.some(([, , c]) => t > c && t < c + .25);
+  $('ccNum').textContent = String(p.length);
+  $('ccRing').setAttribute('fill', pulse ? '#0d3b2a' : 'none');
+  $('ccNum').setAttribute('fill', pulse ? '#fff' : '#0d3b2a');
+  $('ccIcon').style.background = pulse ? 'rgba(13,59,42,.15)' : 'transparent';
+
+  // the list pops up at 2+, and shrinks away when it empties
+  let rows = p, pv = 0;
+  if (p.length >= 2) pv = back(seg(t, p[1][2], p[1][2] + .35));
+  else {
+    const lc = lastClear(t), before = pileAt(lc - .001);
+    if (lc > 0 && before.length >= 2 && t < lc + .3) { rows = before; pv = 1 - seg(t, lc, lc + .3); }
+  }
+  css($('panel'), { display: pv > .01 ? 'block' : 'none', opacity: Math.min(1, pv), transform: `scale(${.9 + .1 * Math.min(1, pv)})` });
+  const html = rows.map((s, i) => `<div class="row${i === rows.length - 1 ? ' last' : ''}"><b>${i + 1}</b>${TEXT[s[3]]}</div>`).join('');
+  if ($('pRows').innerHTML !== html) $('pRows').innerHTML = html;
+  $('pTitle').textContent = `Collected · ${rows.length}`;
+  $('pFoot').textContent = `⌘V pastes all ${rows.length}`;
+
+  // dictation: just typing by voice, no pasting
+  const dv = win(t, DICT_A, DICT_B, .3);
+  css($('dict'), { display: dv > .01 ? 'flex' : 'none', opacity: dv, transform: `translateX(-50%) scale(${.92 + .08 * dv})` });
+  if (dv > 0) $('wave').innerHTML = Array.from({ length: 9 }, (_, i) => `<i style="height:${6 + 16 * Math.abs(Math.sin(t * 7 + i * 1.3)) * (t > TYPE_A - .2 && t < TYPE_B ? 1 : .25)}px"></i>`).join('');
+
+  // notes text
+  let body = '<span class="h">Lisbon plan</span>\n';
+  if (t >= PASTE + .05) {
+    const nf = 1 - seg(t, PASTE + .6, PASTE + 1.8);
+    const add = ['s1', 's2', 's3'].map((k) => TEXT[k]).join('\n\n');
+    body += nf > 0 ? `<span class="new" style="background:rgba(70,200,140,${.25 * nf})">${add}</span>` : add;
+  }
+  const SPOKEN = 'Pack sunscreen and a light jacket.';
+  if (t >= TYPE_A) body += '\n\n' + SPOKEN.slice(0, Math.round(SPOKEN.length * seg(t, TYPE_A, TYPE_B)));
+  const typing = t > TYPE_A && t < TYPE_B;
+  const showCaret = notesFront && t > PASTE && (typing || Math.floor(t * 2.5) % 2 === 0);
+  $('ntext').innerHTML = body + (showCaret ? '<span class="caret"></span>' : '');
+
+  // big keycaps: the first ⌘C, the ⌘V, and the ⌘C on nothing
+  const keyShow = (s, a, pr) => ({ s, on: win(t, a, pr + .8, .2), pop: back(seg(t, a, a + .3)), pressed: t > pr && t < pr + .22 });
+  const k = t < 7 ? keyShow('⌘C', 3.8, sels[0][2]) : t < 13 ? keyShow('⌘V', 9.0, PASTE) : keyShow('⌘C', 17.5, CLEAR_KEY);
+  keySet(k.s);
+  css($('keys'), { left: (k.s === '⌘V' ? 330 : 240) + 'px', top: 250 + 'px', opacity: k.on, display: k.on > 0 ? 'flex' : 'none', transform: `scale(${k.pop})` });
+  [...$('keys').children].forEach((el) => { el.style.transform = k.pressed ? 'translateY(5px) scale(.94)' : ''; el.style.boxShadow = k.pressed ? '0 1px 0 #a9c4b6,0 8px 20px rgba(0,0,0,.3)' : ''; });
+
+  // small ⌘C chip by the cursor for the other copies
+  const chipAt = sels.slice(1).map((s) => s[2]).find((c) => t > c - .15 && t < c + .55);
+
+  // "5 minutes later": the clock spins and the menu bar time jumps ahead
+  const lv = win(t, 21.6, 24.0, .3);
+  css($('later'), { display: lv > .01 ? 'flex' : 'none', opacity: lv });
+  const spin = io(seg(t, 21.8, 23.4));
+  $('hMin').style.transform = `rotate(${spin * 300}deg)`;
+  $('hHour').style.transform = `rotate(${60 + spin * 25}deg)`;
+  $('clock').textContent = t < 21.6 ? (t < 15 ? 'Sat 9:41 AM' : 'Sat 9:44 AM') : `Sat 9:${44 + Math.round(5 * spin)} AM`;
+
+  // cursor
+  const S = (i, end) => { const s = r[sels[i][3]]; return end ? [s.r - 4, s.y] : [s.l + 2, s.y]; };
+  const cp = path(t, [[3.2, 520, 260], [3.4, ...S(0)], [4.0, ...S(0, 1)], [4.7, ...S(1)], [5.3, ...S(1, 1)], [6.1, ...S(2)], [6.7, ...S(2, 1)],
+    [8.6, ...r.notes], [10.4, ...r.notes], [11.4, 940, 300], [14.6, 940, 300],
+    [BACK_CLICK, 420, 470], [15.4, ...S(3)], [15.9, ...S(3, 1)], [16.4, ...S(4)], [16.9, ...S(4, 1)], [DESELECT, 520, 480], [18.8, 520, 480],
+    [19.3, ...S(5)], [19.8, ...S(5, 1)], [20.3, ...S(6)], [20.8, ...S(6, 1)], [21.5, 560, 470], [26, 560, 470]]);
+  const clickDip = sels.some(([a, b]) => t > a && t < b) || [NOTES_CLICK, BACK_CLICK, DESELECT].some((x) => t > x - .02 && t < x + .12);
+  css($('cursor'), { left: cp[0] - 3 + 'px', top: cp[1] - 3 + 'px', opacity: t > 3.15 && t < O ? 1 : 0, transform: clickDip ? 'scale(.85)' : '' });
+  const cv = chipAt ? win(t, chipAt - .15, chipAt + .55, .12) : 0;
+  css($('chip'), { display: cv > .01 ? 'block' : 'none', opacity: cv, left: cp[0] + 18 + 'px', top: cp[1] + 14 + 'px', transform: `scale(${chipAt && t > chipAt && t < chipAt + .18 ? .9 : back(Math.min(1, cv * 1.2))})` });
+}
+
+// ?stamp shows the time in the corner, for reviewing
+if (location.search.includes('stamp')) {
+  const st = document.createElement('div');
+  st.style.cssText = 'position:absolute;right:12px;bottom:12px;z-index:999;padding:5px 10px;border-radius:8px;background:rgba(0,0,0,.7);color:#fff;font:600 20px Menlo,monospace';
+  document.getElementById('stage').appendChild(st);
+  const r0 = render;
+  render = (t) => { r0(t); st.textContent = '0:' + String(Math.floor(t)).padStart(2, '0') + '.' + Math.floor((t % 1) * 10); };
+}
+window.renderAt = (t) => render(t);
+document.body.dataset.ready = '1';
+if (!location.search.includes('capture')) {
+  const s = performance.now();
+  const loop = () => { render(((performance.now() - s) / 1000) % DUR); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+</script>
+</body></html>
