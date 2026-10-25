@@ -3,6 +3,7 @@ import AppKit
 import Carbon
 import ServiceManagement
 import Combine
+import Sparkle
 
 // Copy Collector: while collecting, every ⌘C is added to a pile and the whole pile is put back
 // on the clipboard, so one ⌘V pastes everything you've copied.
@@ -296,6 +297,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             .contains(where: { $0 != me }) {
             NSApp.terminate(nil); return
         }
+        Updates.start()
 
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.target = self
@@ -603,6 +605,7 @@ struct MenuView: View {
                 HStack {
                     Text("⌃⌥C turns collecting on/off").font(.caption).foregroundStyle(.secondary)
                     Spacer()
+                    Button("Updates…") { Updates.check() }
                     Button("Quit") { NSApp.terminate(nil) }
                 }
             }
@@ -646,6 +649,15 @@ struct ToastView: View {
         .background(Capsule().fill(.regularMaterial))
         .padding(6)
     }
+}
+
+// MARK: - Updates
+
+/// Self-updating from this app's GitHub releases (Sparkle): checks about once a day and offers new versions.
+enum Updates {
+    static let controller = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
+    static func start() { controller.startUpdater() }
+    static func check() { controller.checkForUpdates(nil) }
 }
 
 @main

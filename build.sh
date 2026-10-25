@@ -3,12 +3,13 @@
 # ./build.sh dist  also makes dist/CopyCollector.dmg to share.
 set -e
 cd "$(dirname "$0")"
+source tools/sparkle.sh && sparkle_fetch   # self-updating (see tools/sparkle.sh)
 APP=CopyCollector.app
 rm -rf $APP
 mkdir -p $APP/Contents/MacOS $APP/Contents/Resources
 # Universal binary: Apple Silicon + Intel Macs.
 for arch in arm64 x86_64; do
-  swiftc -parse-as-library -swift-version 5 -O -target $arch-apple-macos13 main.swift -o /tmp/CopyCollector-$arch
+  swiftc -parse-as-library -swift-version 5 -O -target $arch-apple-macos13 "${SPARKLE_SWIFTC_FLAGS[@]}" main.swift -o /tmp/CopyCollector-$arch
 done
 lipo -create /tmp/CopyCollector-arm64 /tmp/CopyCollector-x86_64 -output $APP/Contents/MacOS/CopyCollector
 rm /tmp/CopyCollector-arm64 /tmp/CopyCollector-x86_64
@@ -28,14 +29,19 @@ cat > $APP/Contents/Info.plist <<PLIST
   <key>LSUIElement</key><true/>
 </dict></plist>
 PLIST
+sparkle_embed $APP
+sparkle_plist $APP copy-collector
 # Sign with the same local certificate every time so macOS keeps Input Monitoring across rebuilds.
 # (Falls back to ad-hoc signing on a Mac without it; then the permission must be re-added after each build.)
 # GitHub's release builds sign with Developer ID + hardened runtime + timestamp, as Apple's notarization needs.
 if [[ -n "$SIGN_IDENTITY" ]]; then
+  sparkle_sign $APP --force --sign "$SIGN_IDENTITY" --options runtime --timestamp
   codesign --force --sign "$SIGN_IDENTITY" --options runtime --timestamp $APP
 elif security find-certificate -c "Daniel Ryan Local Signing" >/dev/null 2>&1; then
+  sparkle_sign $APP --force --sign "Daniel Ryan Local Signing"
   codesign --force --sign "Daniel Ryan Local Signing" $APP
 else
+  sparkle_sign $APP --force --sign -
   codesign --force --sign - $APP
 fi
 echo "Built $APP"

@@ -26,7 +26,7 @@ Free · macOS 13 or newer · always the latest version
 
 Only ⌘C adds to the pile, so it works alongside voice-to-text dictation apps that paste through the clipboard. It never collects passwords, and it ignores images and files. Nothing leaves your Mac.
 
-**Update:** download again and replace the app. **Remove:** circle → gear → **Quit**, then drag it to the Trash.
+**Updates:** it offers new versions itself (or circle → gear → **Updates…**). **Remove:** circle → gear → **Quit**, then drag it to the Trash.
 
 <details><summary>Build it yourself</summary>
 
