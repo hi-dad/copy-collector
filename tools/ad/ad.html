@@ -48,6 +48,7 @@ html,body{width:1200px;height:675px;overflow:hidden;background:#000;font-family:
 #caption .bullet{width:12px;height:12px;border-radius:6px;background:#6ee6aa;box-shadow:0 0 12px #6ee6aa;flex:none}
 #keys{display:flex;gap:18px;z-index:80}
 .key{width:104px;height:104px;border-radius:24px;background:linear-gradient(#fdfdfd,#e3eee8);box-shadow:0 6px 0 #a9c4b6,0 18px 40px rgba(0,0,0,.35);font-size:52px;font-weight:600;color:#0d3b2a;display:flex;align-items:center;justify-content:center}
+#added{z-index:86;height:38px;padding:0 16px;border-radius:19px;background:rgba(36,36,38,.95);color:#f2f2f2;font-size:15px;display:flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.3)}
 #chip{z-index:85;padding:6px 12px;border-radius:10px;background:#fff;color:#0d3b2a;font-size:20px;font-weight:700;box-shadow:0 4px 0 #a9c4b6,0 10px 24px rgba(0,0,0,.3)}
 #later{inset:0;z-index:66;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,40,27,.55);backdrop-filter:blur(3px);color:#fff}
 #later .face{width:150px;height:150px;border-radius:75px;background:#fff;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.35)}
@@ -99,6 +100,7 @@ html,body{width:1200px;height:675px;overflow:hidden;background:#000;font-family:
 
   <div id="keys" class="abs"></div>
   <div id="chip" class="abs">⌘C</div>
+  <div id="added" class="abs"><span style="color:#3ddc84">✓</span> Added · <b id="addN" style="font-weight:600">1</b>&nbsp;ready to paste</div>
   <div id="caption" class="abs"><span class="bullet"></span><span id="capText"></span></div>
   <div id="later" class="abs"><div class="face"><i id="hMin" style="height:56px"></i><i id="hHour" style="height:38px;width:5px;left:72.5px"></i><b></b></div><div class="lt">5 minutes later…</div></div>
 
@@ -124,9 +126,10 @@ const caps = [
   [3.0, 5.8, 'Copy as many things as you like.'],
   [5.8, 8.4, 'They stack up in a list as you go.'],
   [8.4, 11.8, 'Paste them all at once.'],
-  [11.8, 15.0, 'Dictation works as normal.'],
-  [15.0, 19.0, '⌘C nothing to clear clipboard.'],
-  [19.0, 25.6, 'Clears after 5 min.'],
+  [11.8, 15.0, 'Won’t interfere with dictation.'],
+  [15.0, 17.2, 'Need to clear your clipboard?'],
+  [17.2, 19.0, 'Just ⌘C anywhere on the page…'],
+  [19.0, 25.6, '…or let it clear itself after 5 min.'],
 ];
 
 // each copy: [drag start, drag end, ⌘C time, sentence, selection gone at]
@@ -207,15 +210,11 @@ function render(t) {
   $('ccNum').setAttribute('fill', pulse ? '#fff' : '#0d3b2a');
   $('ccIcon').style.background = pulse ? 'rgba(13,59,42,.15)' : 'transparent';
 
-  // the list pops up at 2+, and shrinks away when it empties
-  let rows = p, pv = 0;
-  if (p.length >= 2) pv = back(seg(t, p[1][2], p[1][2] + .35));
-  else {
-    const lc = lastClear(t), before = pileAt(lc - .001);
-    if (lc > 0 && before.length >= 2 && t < lc + .3) { rows = before; pv = 1 - seg(t, lc, lc + .3); }
-  }
-  css($('panel'), { display: pv > .01 ? 'block' : 'none', opacity: Math.min(1, pv), transform: `scale(${.9 + .1 * Math.min(1, pv)})` });
-  const html = rows.map((s, i) => `<div class="row${i === rows.length - 1 ? ' last' : ''}"><b>${i + 1}</b>${TEXT[s[3]]}</div>`).join('');
+  // the list stays on screen the whole time: empty, 1, 2, 3… and back to empty
+  const rows = p;
+  css($('panel'), { display: 'block' });
+  const html = rows.length ? rows.map((s, i) => `<div class="row${i === rows.length - 1 ? ' last' : ''}"><b>${i + 1}</b>${TEXT[s[3]]}</div>`).join('')
+    : '<div class="row" style="color:#8a8a8f">Copy something to start.</div>';
   if ($('pRows').innerHTML !== html) $('pRows').innerHTML = html;
   $('pTitle').textContent = `Collected · ${rows.length}`;
   $('pFoot').textContent = `⌘V pastes all ${rows.length}`;
@@ -238,15 +237,17 @@ function render(t) {
   const showCaret = notesFront && t > PASTE && (typing || Math.floor(t * 2.5) % 2 === 0);
   $('ntext').innerHTML = body + (showCaret ? '<span class="caret"></span>' : '');
 
-  // big keycaps: the first ⌘C, the ⌘V, and the ⌘C on nothing
+  // big keycaps for the ⌘V only
   const keyShow = (s, a, pr) => ({ s, on: win(t, a, pr + .8, .2), pop: back(seg(t, a, a + .3)), pressed: t > pr && t < pr + .22 });
-  const k = t < 7 ? keyShow('⌘C', 3.8, sels[0][2]) : t < 13 ? keyShow('⌘V', 9.0, PASTE) : keyShow('⌘C', 17.5, CLEAR_KEY);
+  const k = keyShow('⌘V', 9.0, PASTE);
   keySet(k.s);
   css($('keys'), { left: (k.s === '⌘V' ? 330 : 240) + 'px', top: 250 + 'px', opacity: k.on, display: k.on > 0 ? 'flex' : 'none', transform: `scale(${k.pop})` });
   [...$('keys').children].forEach((el) => { el.style.transform = k.pressed ? 'translateY(5px) scale(.94)' : ''; el.style.boxShadow = k.pressed ? '0 1px 0 #a9c4b6,0 8px 20px rgba(0,0,0,.3)' : ''; });
 
-  // small ⌘C chip by the cursor for the other copies
-  const chipAt = sels.slice(1).map((s) => s[2]).find((c) => t > c - .15 && t < c + .55);
+  // small ⌘C tag by the cursor for every copy, and for the ⌘C on nothing
+  const chipAt = [...sels.map((s) => s[2]), CLEAR_KEY].find((c) => t > c - .15 && t < c + .55);
+  // the app's "Added" bubble, centered just above the pointer
+  const addAt = sels.map((s) => s[2]).find((c) => t > c + .05 && t < c + 1.5);
 
   // "5 minutes later": the clock spins and the menu bar time jumps ahead
   const lv = win(t, 21.6, 24.0, .3);
@@ -258,13 +259,17 @@ function render(t) {
 
   // cursor
   const S = (i, end) => { const s = r[sels[i][3]]; return end ? [s.r - 4, s.y] : [s.l + 2, s.y]; };
-  const cp = path(t, [[3.2, 520, 260], [3.4, ...S(0)], [4.0, ...S(0, 1)], [4.7, ...S(1)], [5.3, ...S(1, 1)], [6.1, ...S(2)], [6.7, ...S(2, 1)],
+  const at = (t) => path(t, [[3.2, 520, 260], [3.4, ...S(0)], [4.0, ...S(0, 1)], [4.7, ...S(1)], [5.3, ...S(1, 1)], [6.1, ...S(2)], [6.7, ...S(2, 1)],
     [8.6, ...r.notes], [10.4, ...r.notes], [11.4, 940, 300], [14.6, 940, 300],
     [BACK_CLICK, 420, 470], [15.4, ...S(3)], [15.9, ...S(3, 1)], [16.4, ...S(4)], [16.9, ...S(4, 1)], [DESELECT, 520, 480], [18.8, 520, 480],
     [19.3, ...S(5)], [19.8, ...S(5, 1)], [20.3, ...S(6)], [20.8, ...S(6, 1)], [21.5, 560, 470], [26, 560, 470]]);
+  const cp = at(t);
   const clickDip = sels.some(([a, b]) => t > a && t < b) || [NOTES_CLICK, BACK_CLICK, DESELECT].some((x) => t > x - .02 && t < x + .12);
   css($('cursor'), { left: cp[0] - 3 + 'px', top: cp[1] - 3 + 'px', opacity: t > 3.15 && t < O ? 1 : 0, transform: clickDip ? 'scale(.85)' : '' });
   const cv = chipAt ? win(t, chipAt - .15, chipAt + .55, .12) : 0;
+  const av = addAt ? win(t, addAt + .05, addAt + 1.5, .2) : 0;
+  if (addAt) $('addN').textContent = pileAt(addAt).length;
+  css($('added'), { display: av > .01 ? 'flex' : 'none', opacity: av, left: Math.min(1080, Math.max(120, addAt ? at(addAt)[0] : 0)) + 'px', top: (addAt ? at(addAt)[1] : 0) - 50 + 'px', transform: `translateX(-50%) translateY(${(1 - Math.min(1, av)) * 6}px)` });
   css($('chip'), { display: cv > .01 ? 'block' : 'none', opacity: cv, left: cp[0] + 18 + 'px', top: cp[1] + 14 + 'px', transform: `scale(${chipAt && t > chipAt && t < chipAt + .18 ? .9 : back(Math.min(1, cv * 1.2))})` });
 }
 
